@@ -242,6 +242,69 @@ FoundTradeable(found3Dmnd := 0, found4Dmnd := 0, found1Star := 0, foundGimmighou
         LogToDiscord(altTradeMessage, screenShot, true, accountFullPath, fcScreenshot, altWebhook, altDiscordUserId)
     }
 
+    ; En lugar de restartGameInstance, simplemente retornamos
+    return
+}
+
+     
+
+    friendCode := getFriendCode()
+
+    Sleep, 5000
+    fcScreenshot := Screenshot("FRIENDCODE", "Trades")
+
+    tempDir := A_ScriptDir . "\..\Screenshots\temp"
+    if !FileExist(tempDir)
+        FileCreateDir, %tempDir%
+
+    usernameScreenshotFile := tempDir . "\" . winTitle . "_Username.png"
+    adbTakeScreenshot(usernameScreenshotFile)
+    Sleep, 100 
+
+    try {
+        if (injectMethod && IsFunc("ocr")) {
+            playerName := ""
+            allowedUsernameChars := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-+"
+            usernamePattern := "[\w-]+"
+
+            if(RefinedOCRText(usernameScreenshotFile, 125, 490, 290, 50, allowedUsernameChars, usernamePattern, playerName)) {
+            username := playerName
+            }
+        }
+    } catch e {
+        LogToFile("Failed to OCR the friend code: " . e.message, "OCR.txt")
+    }
+
+    if (FileExist(usernameScreenshotFile)) {
+        FileDelete, %usernameScreenshotFile%
+    }
+
+    statusMessage := "Tradeable cards found"
+    if (username)
+        statusMessage .= " by " . username
+    if (friendCode)
+        statusMessage .= " (" . friendCode . ")"
+
+    logMessage := statusMessage . " in instance: " . scriptName . " (" . packsInPool . " packs, " . openPack . ")\nFile name: " . accountFile . "\nScreenshot file: " . screenShotFileName . "\nBacking up to the Accounts\\Trades folder and continuing..."
+    LogToFile(StrReplace(logMessage, "\n", " "), "S4T.txt")
+
+    if (s4tDiscordWebhookURL) {
+        discordMessage := statusMessage . " in instance: " . scriptName . " (" . packsInPool . " packs, " . openPack . ")\nFound: " . packDetailsMessage . "\nFile name: " . accountFile . "\nBacking up to the Accounts\\Trades folder and continuing..."
+        LogToDiscord(discordMessage, screenShot, true, (s4tSendAccountXml ? accountFullPath : ""), fcScreenshot, s4tDiscordWebhookURL, s4tDiscordUserId)
+    }
+    
+    ; MODIFICACIÓN: Enviar también a altWebhook con información detallada
+    if (altWebhook != 0) {
+        altTradeMessage := "**[INSTANCIA " . scriptName . "]** Cartas tradeables encontradas!`n"
+        altTradeMessage .= "**Detalles:** " . packDetailsMessage . "`n"
+        altTradeMessage .= "**Packs abiertos:** " . packsInPool . "`n"
+        altTradeMessage .= "**Pack actual:** " . openPack . "`n"
+        altTradeMessage .= "**Usuario:** " . (username ? username : "Unknown") . " (" . (friendCode ? friendCode : "Unknown") . ")`n"
+        altTradeMessage .= "**Archivo:** " . accountFile
+        
+        LogToDiscord(altTradeMessage, screenShot, true, accountFullPath, fcScreenshot, altWebhook, altDiscordUserId)
+    }
+
     restartGameInstance("Tradeable cards found. Continuing...", "GodPack")
 }
 
