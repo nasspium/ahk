@@ -98,7 +98,7 @@ altID := 0
 
 ;OPTIONAL add and additional webhook (replace "0" with it) to send webhooks messages to both KSBM
 global altWebhook
-altWebhook := 0
+altWebhook := "https://discord.com/api/webhooks/1416257195171119224/EFA7FOHutfmPEUsRzpPox0OpNmMHBiD3-8iXXwDcFLFrT7OXOedy9KgPWx8aO29eyfi7"
 
 scriptName := StrReplace(A_ScriptName, ".ahk")
 winTitle := scriptName
